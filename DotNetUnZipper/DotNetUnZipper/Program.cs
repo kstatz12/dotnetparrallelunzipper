@@ -17,13 +17,24 @@ namespace DotNetUnZipper
         static void Main(string[] args)
         {
             var dirPath = ConfigurationSettings.AppSettings["SourceDirectory"];
-            var di = new DirectoryInfo(dirPath);
-            var files = di.GetFiles("*.zip");
-            Parallel.ForEach(files, currentfile =>
+            try
             {
-                Extract(currentfile);
-                Console.WriteLine("Decompressing {0} on thread {1}", currentfile, Thread.CurrentThread.ManagedThreadId);
-            });
+                var di = new DirectoryInfo(dirPath);
+                var files = di.GetFiles("*.zip");
+                if (files.Length > 0)
+                {
+                    Parallel.ForEach(files, Extract);
+                }
+                else
+                {
+                    throw new Exception("No Zip Files Found In That Directory");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            Console.ReadKey();
         }
         private static void Extract(FileInfo file)
         {
@@ -36,11 +47,12 @@ namespace DotNetUnZipper
                     zipFile = new ZipFile(fs);
                     foreach (ZipEntry zipEntry in zipFile)
                     {
-                        if (!zipEntry.IsFile)
+                        if (zipEntry.IsFile)
                         {
-                            continue;
+                            throw new Exception("No File Found");
                         }
                         var entryFileName = zipEntry.Name;
+                        entryFileName = Path.GetFileName(entryFileName);
                         var buffer = new byte[4096];
                         var zipStream = zipFile.GetInputStream(zipEntry);
                         var fullZipToPath = Path.Combine(outfile, entryFileName);
@@ -55,6 +67,10 @@ namespace DotNetUnZipper
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
             finally
             {
