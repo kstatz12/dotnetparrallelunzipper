@@ -12,18 +12,27 @@ using ICSharpCode.SharpZipLib.Zip;
 
 namespace DotNetUnZipper
 {
-    class Program
+    static class Program
     {
+        static readonly string DirPath = ConfigurationSettings.AppSettings["SourceDirectory"];
+        static readonly string ArchivePath = ConfigurationSettings.AppSettings["ArchiveDirectory"];
         static void Main(string[] args)
         {
-            var dirPath = ConfigurationSettings.AppSettings["SourceDirectory"];
             try
             {
-                var di = new DirectoryInfo(dirPath);
+                var di = new DirectoryInfo(DirPath);
                 var files = di.GetFiles("*.zip");
                 if (files.Length > 0)
                 {
-                    Parallel.ForEach(files, Extract);
+                    Parallel.ForEach(files, info =>
+                    {
+                        info.CopyTo(ArchivePath, false);
+                        Console.WriteLine("Archived {0} Successfully", info.Name);
+                        Extract(info);
+                        Console.WriteLine("Unzipped {0} Successfully", info.Name);
+                        info.Delete();
+                        Console.WriteLine("Deleted {0} Successfully", info.Name);
+                    });
                 }
                 else
                 {
@@ -45,7 +54,8 @@ namespace DotNetUnZipper
                 using (var fs = file.OpenRead())
                 {
                     zipFile = new ZipFile(fs);
-                    foreach (ZipEntry zipEntry in zipFile)
+                }
+                foreach (ZipEntry zipEntry in zipFile)
                     {
                         if (zipEntry.IsFile)
                         {
@@ -66,7 +76,6 @@ namespace DotNetUnZipper
                             StreamUtils.Copy(zipStream, streamWriter, buffer);
                         }
                     }
-                }
             }
             catch (Exception ex)
             {
