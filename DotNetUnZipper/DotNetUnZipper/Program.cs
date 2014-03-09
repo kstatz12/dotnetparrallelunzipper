@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO.Compression;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
-
+using System.Configuration;
 namespace DotNetUnZipper
 {
     static class Program
@@ -22,16 +23,27 @@ namespace DotNetUnZipper
             {
                 var di = new DirectoryInfo(DirPath);
                 var files = di.GetFiles("*.zip");
+
                 if (files.Length > 0)
                 {
                     Parallel.ForEach(files, info =>
                     {
-                        info.CopyTo(ArchivePath, false);
-                        Console.WriteLine("Archived {0} Successfully", info.Name);
-                        Extract(info);
-                        Console.WriteLine("Unzipped {0} Successfully", info.Name);
-                        info.Delete();
-                        Console.WriteLine("Deleted {0} Successfully", info.Name);
+                        bool status;
+                        //info.CopyTo(ArchivePath, false);
+                        //Console.WriteLine("Archived {0} Successfully", info.Name);
+                        Extract(info, out status);
+                        if (status)
+                        {
+                            Console.WriteLine("Unzipped {0} Successfully", info.Name);
+                            info.Delete();
+                            Console.WriteLine("Deleted {0} Successfully", info.Name);
+                        }
+                        else
+                        {
+                            info.CopyTo(ArchivePath);
+                            Console.WriteLine("Moved Failed Unzips to Archive {0}", info.Name);
+                        }
+                        
                     });
                 }
                 else
@@ -45,8 +57,9 @@ namespace DotNetUnZipper
             }
             Console.ReadKey();
         }
-        private static void Extract(FileInfo file)
+        private static void Extract(FileInfo file, out bool status)
         {
+            bool successStatus = false;
             var outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
             ZipFile zipFile = null;
             try
@@ -59,7 +72,9 @@ namespace DotNetUnZipper
                     {
                         if (zipEntry.IsFile)
                         {
+                            status = false;
                             throw new Exception("No File Found");
+                            
                         }
                         var entryFileName = zipEntry.Name;
                         entryFileName = Path.GetFileName(entryFileName);
@@ -74,12 +89,14 @@ namespace DotNetUnZipper
                         using (var streamWriter = File.Create(fullZipToPath))
                         {
                             StreamUtils.Copy(zipStream, streamWriter, buffer);
+                            successStatus = true;
                         }
                     }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                successStatus = false;
             }
             finally
             {
@@ -88,6 +105,7 @@ namespace DotNetUnZipper
                     zipFile.IsStreamOwner = true;
                     zipFile.Close();
                 }
+                status = successStatus;
             }
         }
     }
