@@ -3,14 +3,14 @@ using System.Configuration;
 using System.IO;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
-
+using System.Configuration.Assemblies;
 namespace DotNetUnZipper
 {
     static class Program
     {
-        static readonly string DirPath = ConfigurationSettings.AppSettings["SourceDirectory"];
-        static readonly string ArchivePath = ConfigurationSettings.AppSettings["ArchiveDirectory"];
-        static readonly string Outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
+        private static readonly string DirPath = ConfigurationSettings.AppSettings["SourceDirectory"];
+        private static readonly string ArchivePath = ConfigurationSettings.AppSettings["ArchiveDirectory"];
+        private static readonly string Outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
         private static readonly bool IsNestedFolders = bool.Parse(ConfigurationSettings.AppSettings["IsNestedFolders"]);
         static void Main(string[] args)
         {
@@ -39,7 +39,6 @@ namespace DotNetUnZipper
                             Archive(info);
                             Console.WriteLine("Moved Failed Unzips to Archive {0}", info.Name);
                         }
-                        
                     });
                 }
                 else
@@ -51,7 +50,6 @@ namespace DotNetUnZipper
             {
                 Console.WriteLine(ex.Message);
             }
-            Console.ReadKey();
         }
         private static int CheckFileIfExists(FileInfo file)
         {
@@ -62,6 +60,10 @@ namespace DotNetUnZipper
         private static string CreateDirectory(FileInfo file)
         {
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.Name);
+            if (fileNameWithoutExtension == null)
+            {
+                return null;
+            }
             string newDirectory = Path.Combine(Outfile, fileNameWithoutExtension);
             if (!Directory.Exists(newDirectory))
             {
