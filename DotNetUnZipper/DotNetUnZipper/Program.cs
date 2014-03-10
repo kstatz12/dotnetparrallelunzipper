@@ -66,8 +66,13 @@ namespace DotNetUnZipper
         private static bool CheckIfDirectoryExists(FileInfo file, string directory)
         {
             var folderName = Path.GetFileNameWithoutExtension(file.Name);
-            var path = Path.Combine(directory, folderName);
-            return Directory.Exists(path);
+            if (folderName == null)
+                return false;
+            else
+            {
+                var path = Path.Combine(directory, folderName);
+                return Directory.Exists(path);
+            }
         }
 
 
@@ -106,11 +111,11 @@ namespace DotNetUnZipper
             }
             else
             { 
-                bool successStatus = false;
+                var successStatus = false;
                 //declares/assigns output directory
                 //Build file file path for extraction
-                string fileName = Path.Combine(DirPath, file.Name);
-                FastZip fastZip = new FastZip();
+                var fileName = Path.Combine(DirPath, file.Name);
+                var fastZip = new FastZip();
                 try
                 {
                     if (!isNestedFolders)
