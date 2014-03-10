@@ -62,30 +62,49 @@ namespace DotNetUnZipper
         }
         private static void Extract(FileInfo file, out bool status)
         {
-            bool successStatus = false;
-            //declares/assigns output directory
-            var outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
-            //Build file file path for extraction
-            string fileName = Path.Combine(DirPath, file.Name);
-            FastZip fastZip = new FastZip();
-            try
+            if (file == null)
             {
-                //extracts file to destination directory
-                fastZip.ExtractZip(fileName, outfile, null);
-                //sets success status
-                successStatus = true;
+                status = false;
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine(ex.Message);
-                //fails job
-                successStatus = false;
+                bool successStatus = false;
+                //declares/assigns output directory
+                var outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
+                //Build file file path for extraction
+                string fileName = Path.Combine(DirPath, file.Name);
+                FastZip fastZip = new FastZip();
+                try
+                {
+                    //extracts file to destination directory
+                    var di = new DirectoryInfo(outfile);
+                    bool exists = false;
+                    var files = di.GetFiles(file.Name);
+                    if (files.Length <= 0)
+                    {
+                        fastZip.ExtractZip(fileName, outfile, null);
+                        //sets success status
+                        successStatus = true;
+                    }
+                    else
+                    {
+                        successStatus = false;
+                        throw new Exception("File Already Exists");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    //fails job
+                    successStatus = false;
+                }
+                finally
+                {
+                    //sets out param after all proccessing has finished
+                    status = successStatus;
+                }
             }
-            finally
-            {
-                //sets out param after all proccessing has finished
-                status = successStatus;
-            }
+            
         }
     }
 }
