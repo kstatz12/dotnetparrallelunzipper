@@ -72,41 +72,14 @@ namespace DotNetUnZipper
             bool successStatus = false;
             var outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
             ZipFile zipFile = null;
+            FastZip fast  = new FastZip();
+            string fileName = Path.Combine(DirPath, file.Name);
             try
             {
-                using (var fs = file.OpenRead())
-                {
-                    zipFile = new ZipFile(fs);
 
-                    foreach (ZipEntry zipEntry in zipFile)
-                    {
-                        if (zipEntry.IsFile)
-                        {
-                            status = false;
-                            throw new Exception("No File Found");
-
-                        }
-                        var entryFileName = zipEntry.Name;
-                        entryFileName = Path.GetFileName(entryFileName);
-                        var buffer = new byte[4096];
-                        var zipStream = zipFile.GetInputStream(zipEntry);
-                        if (entryFileName != null)
-                        {
-                            var fullZipToPath = Path.Combine(outfile, entryFileName);
-                            var directoryName = Path.GetDirectoryName(fullZipToPath);
-                            if (!string.IsNullOrEmpty(directoryName))
-                            {
-                                Directory.CreateDirectory(directoryName);
-                            }
-                            
-                            using (var streamWriter = File.Create(fullZipToPath))
-                            {
-                                StreamUtils.Copy(zipStream, streamWriter, buffer);
-                                successStatus = true;
-                            }
-                        }
-                    }
-                }
+                string fastZipFilter = null;
+                fast.ExtractZip(fileName, outfile, fastZipFilter);
+                successStatus = true;
             }
             catch (Exception ex)
             {
