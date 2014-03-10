@@ -3,7 +3,6 @@ using System.Configuration;
 using System.IO;
 using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Zip;
-using System.Configuration.Assemblies;
 namespace DotNetUnZipper
 {
     static class Program
@@ -12,6 +11,8 @@ namespace DotNetUnZipper
         private static readonly string ArchivePath = ConfigurationSettings.AppSettings["ArchiveDirectory"];
         private static readonly string Outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
         private static readonly bool IsNestedFolders = bool.Parse(ConfigurationSettings.AppSettings["IsNestedFolders"]);
+
+
         static void Main(string[] args)
         {
             var di = new DirectoryInfo(DirPath);
@@ -50,13 +51,26 @@ namespace DotNetUnZipper
             {
                 Console.WriteLine(ex.Message);
             }
+            Console.ReadKey();
         }
+
+
         private static int CheckFileIfExists(FileInfo file)
         {
             var di = new DirectoryInfo(Outfile);
             var files = di.GetFiles(file.Name);
             return (int) (files.Length < 0 ? 0 : files.Length);
         }
+
+
+        private static bool CheckIfDirectoryExists(FileInfo file, string directory)
+        {
+            var folderName = Path.GetFileNameWithoutExtension(file.Name);
+            var path = Path.Combine(directory, folderName);
+            return Directory.Exists(path);
+        }
+
+
         private static string CreateDirectory(FileInfo file)
         {
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.Name);
@@ -71,6 +85,8 @@ namespace DotNetUnZipper
             }
             return newDirectory;
         }
+
+
         private static void Archive(FileInfo file)
         {
             if (file == null) return;
@@ -80,6 +96,8 @@ namespace DotNetUnZipper
             file.CopyTo(path, true);
             file.Delete();
         }
+
+
         private static void Extract(FileInfo file, bool isNestedFolders, out bool status)
         {
             if (file == null)
@@ -87,7 +105,7 @@ namespace DotNetUnZipper
                 status = false;
             }
             else
-            {
+            { 
                 bool successStatus = false;
                 //declares/assigns output directory
                 //Build file file path for extraction
@@ -99,9 +117,9 @@ namespace DotNetUnZipper
                     {
                         var path = CreateDirectory(file);
                         //extracts file to destination directory
-                        switch (CheckFileIfExists(file))
+                        switch (CheckIfDirectoryExists(file, Outfile))
                         {
-                            case 0:
+                            case false:
                                 fastZip.ExtractZip(fileName, path, null);
                                 successStatus = true;
                                 break;
@@ -112,9 +130,9 @@ namespace DotNetUnZipper
                     }
                     else
                     {
-                        switch (CheckFileIfExists(file))
+                        switch (CheckIfDirectoryExists(file, Outfile))
                         {
-                            case 0:
+                            case false:
                                 fastZip.ExtractZip(fileName, Outfile, null);
                                 successStatus = true;
                                 break;
@@ -136,7 +154,6 @@ namespace DotNetUnZipper
                     status = successStatus;
                 }
             }
-            
         }
     }
 }
