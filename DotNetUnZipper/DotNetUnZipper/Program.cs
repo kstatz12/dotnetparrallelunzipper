@@ -40,7 +40,7 @@ namespace DotNetUnZipper
                         }
                         else
                         {
-                            info.CopyTo(ArchivePath);
+                            Archive(info);
                             Console.WriteLine("Moved Failed Unzips to Archive {0}", info.Name);
                         }
                         
@@ -57,6 +57,16 @@ namespace DotNetUnZipper
             }
             Console.ReadKey();
         }
+
+        private static void Archive(FileInfo file)
+        {
+            if (file != null)
+            {
+                var path = Path.Combine(ArchivePath, file.Name);
+                file.CopyTo(path, true);
+                file.Delete();
+            }
+        }
         private static void Extract(FileInfo file, out bool status)
         {
             bool successStatus = false;
@@ -67,31 +77,36 @@ namespace DotNetUnZipper
                 using (var fs = file.OpenRead())
                 {
                     zipFile = new ZipFile(fs);
-                }
-                foreach (ZipEntry zipEntry in zipFile)
+
+                    foreach (ZipEntry zipEntry in zipFile)
                     {
                         if (zipEntry.IsFile)
                         {
                             status = false;
                             throw new Exception("No File Found");
-                            
+
                         }
                         var entryFileName = zipEntry.Name;
                         entryFileName = Path.GetFileName(entryFileName);
                         var buffer = new byte[4096];
                         var zipStream = zipFile.GetInputStream(zipEntry);
-                        var fullZipToPath = Path.Combine(outfile, entryFileName);
-                        var directoryName = Path.GetDirectoryName(fullZipToPath);
-                        if (!string.IsNullOrEmpty(directoryName))
+                        if (entryFileName != null)
                         {
-                            Directory.CreateDirectory(directoryName);
-                        }
-                        using (var streamWriter = File.Create(fullZipToPath))
-                        {
-                            StreamUtils.Copy(zipStream, streamWriter, buffer);
-                            successStatus = true;
+                            var fullZipToPath = Path.Combine(outfile, entryFileName);
+                            var directoryName = Path.GetDirectoryName(fullZipToPath);
+                            if (!string.IsNullOrEmpty(directoryName))
+                            {
+                                Directory.CreateDirectory(directoryName);
+                            }
+                            
+                            using (var streamWriter = File.Create(fullZipToPath))
+                            {
+                                StreamUtils.Copy(zipStream, streamWriter, buffer);
+                                successStatus = true;
+                            }
                         }
                     }
+                }
             }
             catch (Exception ex)
             {
@@ -104,6 +119,7 @@ namespace DotNetUnZipper
                 {
                     zipFile.IsStreamOwner = true;
                     zipFile.Close();
+                    status = successStatus;
                 }
                 status = successStatus;
             }
