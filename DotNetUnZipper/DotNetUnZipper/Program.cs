@@ -10,6 +10,7 @@ namespace DotNetUnZipper
     {
         static readonly string DirPath = ConfigurationSettings.AppSettings["SourceDirectory"];
         static readonly string ArchivePath = ConfigurationSettings.AppSettings["ArchiveDirectory"];
+        static readonly string Outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
         static void Main(string[] args)
         {
             try
@@ -49,8 +50,14 @@ namespace DotNetUnZipper
             {
                 Console.WriteLine(ex.Message);
             }
+            Console.ReadKey();
         }
-
+        private static int CheckFileIfExists(FileInfo file)
+        {
+            var di = new DirectoryInfo(Outfile);
+            var files = di.GetFiles(file.Name);
+            return (int) (files.Length < 0 ? 0 : files.Length);
+        }
         private static void Archive(FileInfo file)
         {
             if (file == null) return;
@@ -70,19 +77,16 @@ namespace DotNetUnZipper
             {
                 bool successStatus = false;
                 //declares/assigns output directory
-                var outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
+                
                 //Build file file path for extraction
                 string fileName = Path.Combine(DirPath, file.Name);
                 FastZip fastZip = new FastZip();
                 try
                 {
                     //extracts file to destination directory
-                    var di = new DirectoryInfo(outfile);
-                    bool exists = false;
-                    var files = di.GetFiles(file.Name);
-                    if (files.Length <= 0)
+                    if (CheckFileIfExists(file) == 0)
                     {
-                        fastZip.ExtractZip(fileName, outfile, null);
+                        fastZip.ExtractZip(fileName, Outfile, null);
                         //sets success status
                         successStatus = true;
                     }
