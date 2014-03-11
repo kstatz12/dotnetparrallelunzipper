@@ -122,9 +122,10 @@ namespace DotNetUnZipper
                     {
                         var path = CreateDirectory(file);
                         //extracts file to destination directory
-                        switch (CheckIfDirectoryExists(file, Outfile))
+                        switch (CheckFileIfExists(file))
                         {
-                            case false:
+                            
+                            case 0:
                                 fastZip.ExtractZip(fileName, path, null);
                                 successStatus = true;
                                 break;
