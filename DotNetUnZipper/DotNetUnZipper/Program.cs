@@ -34,12 +34,12 @@ namespace DotNetUnZipper
                             if (!ArchiveFiles)
                             {
                                 info.Delete();
+                                Console.WriteLine("Deleted {0} Successfully", info.Name);
                             }
                             else
                             {
                                 Archive(info);
                             }
-                            Console.WriteLine("Deleted {0} Successfully", info.Name);
                         }
                         else
                         {
