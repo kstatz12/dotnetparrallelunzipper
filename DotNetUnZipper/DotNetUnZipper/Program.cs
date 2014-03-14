@@ -11,7 +11,7 @@ namespace DotNetUnZipper
         private static readonly string ArchivePath = ConfigurationSettings.AppSettings["ArchiveDirectory"];
         private static readonly string Outfile = ConfigurationSettings.AppSettings["DestinationDirectory"];
         private static readonly bool IsNestedFolders = bool.Parse(ConfigurationSettings.AppSettings["IsNestedFolders"]);
-
+        private static readonly bool ArchiveFiles = bool.Parse(ConfigurationSettings.AppSettings["ArchiveFiles"]);
 
         static void Main(string[] args)
         {
@@ -31,7 +31,14 @@ namespace DotNetUnZipper
                         {
                             Console.WriteLine("Unzipped {0} Successfully", info.Name);
                             //Delete successfuly extracted file
-                            info.Delete();
+                            if (!ArchiveFiles)
+                            {
+                                info.Delete();
+                            }
+                            else
+                            {
+                                Archive(info);
+                            }
                             Console.WriteLine("Deleted {0} Successfully", info.Name);
                         }
                         else
